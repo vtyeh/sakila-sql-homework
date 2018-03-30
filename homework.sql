@@ -30,40 +30,29 @@ where country in ('Afghanistan', 'Bangladesh', 'China');
 -- 3a. Add a middle_name column to the table actor. Position it between first_name and last_name. --
 -- Hint: you will need to specify the data type.--
 alter table actor
-add middle_name varchar(30);
-create table actors(
-	actor_id int not null auto_increment,
-    first_name varchar(30) not null,
-    middle_name varchar(30),
-    last_name varchar(30) not null,
-    primary key(actor_id)
-);
-insert into actors(actor_id, first_name, middle_name, last_name) 
-select actor_id, first_name, middle_name, last_name 
-from actor;
+add middle_name varchar(30) after first_name;
 
 -- 3b. You realize that some of these actors have tremendously long last names. --
 -- Change the data type of the middle_name column to blobs.--
-alter table actors
-modify column middle_name blob;
+alter table actor
+modify middle_name blob;
 
 -- 3c. Now delete the middle_name column.--
-alter table actors
-drop column middle_name;
+alter table actor
+drop middle_name;
 
 -- 4a. List the last names of actors, as well as how many actors have that last name.--
-select last_name from actors;
-select count(last_name) from actors;
+select last_name, count(*) as count from actor group by last_name;
 
 -- 4b. List last names of actors and the number of actors who have that last name, but only for names that are shared by at least two actors. --
-select last_name, count(*) c from actors group by last_name having c > 1;
+select last_name, count(*) count from actor group by last_name having count > 1;
 
 -- Turn off safe update mode --
 set sql_safe_updates = 0;
 
 -- 4c. Oh, no! The actor HARPO WILLIAMS was accidentally entered in the actor table as GROUCHO WILLIAMS, --
 -- the name of Harpo's second cousin's husband's yoga teacher. Write a query to fix the record.--
-update actors 
+update actor 
 set first_name='HARPO' 
 where first_name='Groucho' and last_name='Williams';
 
@@ -71,21 +60,16 @@ where first_name='Groucho' and last_name='Williams';
 -- if the first name of the actor is currently HARPO, change it to GROUCHO. Otherwise, change the first name to MUCHO GROUCHO, --
 -- as that is exactly what the actor will be with the grievous error. BE CAREFUL NOT TO CHANGE THE FIRST NAME OF EVERY ACTOR TO MUCHO GROUCHO, HOWEVER! --
 -- (Hint: update the record using a unique identifier.)--
-update actors 
-set first_name='GROUCHO'
-where first_name='Harpo' and last_name='Williams';
+update actor 
+set first_name=case
+when 'HARPO' 
+then 'GROUCHO'
+else 'MUCHO GROUCHO'
+end
+where actor_id=173;
 
 -- 5a. You cannot locate the schema of the address table. Which query would you use to re-create it? --
-create table address(
-	address_id int not null auto_increment,
-    address varchar(50) not null,
-    address2 varchar(50),
-    district varchar(20),
-    city_id int(5),
-    postal_code varchar(10),
-    phone varchar(20),
-    location blob,
-);
+show create table address;
 
 -- 6a. Use JOIN to display the first and last names, as well as the address, of each staff member. Use the tables staff and address. --
 select first_name, last_name, address
@@ -124,13 +108,13 @@ order by last_name;
 -- Use subqueries to display the titles of movies starting with the letters K and Q whose language is English. --
 select title
 from film
-where (title like 'K%' or title like 'Q%') in 
+where title like 'K%' or title like 'Q%' and language_id in 
 (select language_id from language where name='English');
 
 -- 7b. Use subqueries to display all actors who appear in the film Alone Trip. --
 select film_id, title from film where title='Alone Trip';
 
-select first_name, last_name from actors
+select first_name, last_name from actor
 where actor_id in (select actor_id from film_actor where film_id=17);
 
 -- 7c. You want to run an email marketing campaign in Canada, for which you will need the names and email addresses of all Canadian customers. --
@@ -141,15 +125,6 @@ join address on address.address_id = customer.address_id
 join city on city.city_id = address.city_id
 join country on country.country_id = city.country_id
 where country = 'Canada';
-
-select * from city where country_id=20;
-select * from address where city_id=179 or city_id=196
-or city_id=300 or city_id=313 or city_id=383
-or city_id=430 or city_id=565;
-select * from customer where address_id=481 or address_id=468 or 
-address_id=1 or  address_id=3 or  address_id=193 or  address_id=415 or 
-address_id=441; 
--- how come 1 and 3 don't show up? --
 
 -- 7d. Sales have been lagging among young families, and you wish to target all family movies for a promotion. --
 -- Identify all movies categorized as family films. --
