@@ -1,5 +1,5 @@
 # Sakila: The SQL
-### Using the opensource sakila database, I completed the following queries:
+### Using the open source sakila database, I completed the following queries:
 
 * 1a. Display the first and last names of all actors from the table `actor`. 
 
